@@ -3,8 +3,8 @@
 **Stop Stalling. Start Moving.**
 
 SprintLane is a local-first Windows desktop app for tracking projects, tasks and subtasks — priorities, due dates,
-progress and delayed work — with everything stored in a local SQLite file. No account, no server, no internet
-connection required.
+progress and delayed work — with everything stored in a local SQLite file. **No account, no server, no internet
+connection required.**
 
 Built with Electron, React, TypeScript, Tailwind CSS and Drizzle ORM. See
 [`SprintLane_Build_Specification_v1.0.0.docx`](SprintLane_Build_Specification_v1.0.0.docx) for the full product spec this
