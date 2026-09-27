@@ -107,6 +107,22 @@ export type ImportResult =
   | { ok: true; safetyBackupPath: string }
   | { ok: false; canceled?: boolean; error?: string }
 
+/** Desktop reminders. Notifications only fire while SprintLane is running (open or in the tray). */
+export interface AppSettings {
+  notificationsEnabled: boolean
+  /** Remind this many days before a task's due date (0 = due-today only). */
+  reminderDays: number
+  /** Start SprintLane, minimized to the tray, when Windows logs in. */
+  launchAtLogin: boolean
+}
+
+export const appSettingsSchema = z.object({
+  notificationsEnabled: z.boolean().optional(),
+  reminderDays: z.number().int().min(0).max(14).optional(),
+  launchAtLogin: z.boolean().optional(),
+})
+export type AppSettingsInput = z.input<typeof appSettingsSchema>
+
 export interface SprintLaneApi {
   projects: {
     list(): Promise<ProjectWithStats[]>
@@ -124,5 +140,16 @@ export interface SprintLaneApi {
     info(): Promise<DatabaseInfo>
     export(): Promise<BackupResult>
     import(): Promise<ImportResult>
+  }
+  settings: {
+    get(): Promise<AppSettings>
+    update(patch: AppSettingsInput): Promise<AppSettings>
+    /** Fires an immediate desktop notification so the user can confirm they actually see it. Resolves false if the OS reports notifications aren't supported. */
+    testNotification(): Promise<boolean>
+  }
+  app: {
+    quit(): Promise<void>
+    /** Fired when a notification is clicked; returns an unsubscribe function. */
+    onNavigate(callback: (path: string) => void): () => void
   }
 }

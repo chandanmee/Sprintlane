@@ -39,6 +39,8 @@ implements.
 - **Filtering** — All / Pending / In Progress / Delayed / Completed, per project.
 - **Backup & restore** — export a database snapshot, import one back with validation and an automatic safety backup
   before anything is replaced.
+- **Desktop notifications** — native Windows toasts for tasks due soon and Critical-priority tasks that haven't been
+  started; SprintLane runs from the system tray so reminders keep working after you close the window.
 - **Local-first** — all data lives in a SQLite file in your Windows user profile; nothing leaves the machine.
 
 ## Getting started
@@ -69,8 +71,11 @@ This starts Vite and launches the Electron window with hot reload.
 ```
 sprintlane/
 ├── electron/               # Main process (never rendered, no DOM)
-│   ├── main.ts              # App lifecycle, window creation, wires everything up
+│   ├── main.ts              # App lifecycle, window/tray creation, wires everything up
 │   ├── preload.ts           # Narrow, typed contextBridge API exposed to the renderer
+│   ├── appSettings.ts        # Reads/writes preferences.json (notifications, launch at login)
+│   ├── notifications.ts      # Periodic scheduler that raises Windows toasts
+│   ├── tray.ts                # System tray icon, context menu, quit flag
 │   ├── database/
 │   │   ├── client.ts         # Opens the SQLite file, runs migrations, validates backups
 │   │   ├── schema.ts         # Drizzle table definitions (source of truth for the schema)
@@ -85,7 +90,8 @@ sprintlane/
 │   └── lib/                  # zustand store, utils
 ├── shared/                  # Used by both renderer and main
 │   ├── types.ts               # Domain types + zod validation schemas
-│   └── progress.ts            # Progress-percentage rules (unit tested)
+│   ├── progress.ts            # Progress-percentage rules (unit tested)
+│   └── reminders.ts           # Due-soon / critical-pending selection rules (unit tested)
 └── docs/screenshots/         # README images
 ```
 
@@ -122,15 +128,31 @@ hard-coded), outside the install directory — so app updates and uninstalls nev
   writes a safety backup to `%APPDATA%\SprintLane\backups`, then swaps the database — rolling back automatically if
   anything fails.
 
+### Notifications
+
+Closing the window hides it to the system tray instead of quitting (`electron/tray.ts`) — SprintLane only exits via
+the tray menu or Settings > Quit. Every 15 minutes (and once ~8s after launch) `electron/notifications.ts` checks the
+database and raises a native Windows toast for:
+
+- an open task due within the configured reminder window (default: today or tomorrow),
+- a **Critical**-priority task that's still **Pending** (never started), and
+- a daily summary the first time any tasks are Delayed.
+
+Clicking a toast focuses the window and navigates straight to that task. Each one only fires once per day
+(tracked in memory, so a restart can repeat it, but a running instance won't spam you). All of this is configurable —
+or fully disable-able — from Settings, along with whether SprintLane launches at Windows login
+(`app.setLoginItemSettings`, started with `--hidden` so it doesn't pop a window at boot).
+
 ## Testing
 
 ```bash
 npm test
 ```
 
-Covers the progress-percentage rules (`shared/progress.test.ts`) and the repositories end-to-end against a real
-temporary SQLite file (`electron/database/repo.test.ts`): persistence across reopen, subtask/parent sync, cascade
-delete, the overdue rule and backup-file validation.
+Covers the progress-percentage rules (`shared/progress.test.ts`), the reminder-selection rules
+(`shared/reminders.test.ts`), preferences persistence (`electron/appSettings.test.ts`), and the repositories
+end-to-end against a real temporary SQLite file (`electron/database/repo.test.ts`): persistence across reopen,
+subtask/parent sync, cascade delete, the overdue rule and backup-file validation.
 
 ## License
 

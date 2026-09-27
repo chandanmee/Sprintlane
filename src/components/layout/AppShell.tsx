@@ -1,6 +1,6 @@
 import { FolderKanban, LayoutDashboard, Settings, X } from 'lucide-react'
 import { useEffect } from 'react'
-import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import logo from '@/assets/logo.png'
 import { useStore } from '@/lib/store'
 import { cn } from '@/lib/utils'
@@ -58,10 +58,14 @@ function SideLink({ to, label, icon: Icon, end }: (typeof nav)[number]) {
 export function AppShell() {
   const loadProjects = useStore((s) => s.loadProjects)
   const { pathname } = useLocation()
+  const navigate = useNavigate()
   // Refresh on navigation so counts and progress are never stale.
   useEffect(() => {
     void loadProjects()
   }, [loadProjects, pathname])
+
+  // Clicking a Windows notification tells the renderer where to go.
+  useEffect(() => window.sprintlane.app.onNavigate((path) => navigate(path)), [navigate])
 
   return (
     <div className="flex h-full">

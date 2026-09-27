@@ -21,6 +21,19 @@ const api: SprintLaneApi = {
     export: call('backup:export') as SprintLaneApi['backup']['export'],
     import: call('backup:import') as SprintLaneApi['backup']['import'],
   },
+  settings: {
+    get: call('settings:get') as SprintLaneApi['settings']['get'],
+    update: call('settings:update') as SprintLaneApi['settings']['update'],
+    testNotification: call('settings:testNotification') as SprintLaneApi['settings']['testNotification'],
+  },
+  app: {
+    quit: call('app:quit') as SprintLaneApi['app']['quit'],
+    onNavigate: (callback) => {
+      const listener = (_event: Electron.IpcRendererEvent, path: string) => callback(path)
+      ipcRenderer.on('navigate', listener)
+      return () => ipcRenderer.removeListener('navigate', listener)
+    },
+  },
 }
 
 contextBridge.exposeInMainWorld('sprintlane', api)
