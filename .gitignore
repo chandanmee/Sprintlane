@@ -1,0 +1,19 @@
+node_modules
+dist
+dist-electron
+release
+*.log
+
+# Internal planning doc — not for the public repo (see README screenshot note)
+SprintLane_Build_Specification_v1.0.0.docx
+~$*.docx
+
+# Unused logo draft, kept locally only
+src/assets/logo_a.png
+
+# Editor/OS cruft
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+Thumbs.db
